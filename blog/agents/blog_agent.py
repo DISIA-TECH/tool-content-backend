@@ -335,15 +335,48 @@ class GeneralInterestBlogAgent(BlogAgent):
             if urls_content:
                 kwargs["comentarios_adicionales"] += f"\n\nInformación adicional de las URLs:\n{urls_content}"
             
-            # Si se proporcionaron componentes de sistema específicos, actualizar plantilla temporalmente
+            # Manejar system_components si se proporcionaron
             if request.system_components:
                 original_template = self.prompt_template
                 try:
-                    # Crear una nueva plantilla con los componentes proporcionados
-                    temp_template = GeneralInterestPromptTemplate(
-                        **{k: v for k, v in request.system_components.items() if v is not None}
-                    )
-                    self.update_prompt_template(temp_template)
+                    # Verificar qué campos de system_components son válidos para el constructor
+                    valid_fields = {
+                        'role_description', 'content_objective', 'style_guidance', 
+                        'structure_description', 'tone', 'format_guide', 
+                        'seo_guidelines', 'limitations', 'additional_instructions'
+                    }
+                    
+                    # Filtrar solo los campos válidos
+                    filtered_components = {
+                        k: v for k, v in request.system_components.items() 
+                        if k in valid_fields and v is not None
+                    }
+                    
+                    # Si hay campos válidos, crear una nueva plantilla
+                    if filtered_components:
+                        # Crear una nueva plantilla con los campos proporcionados
+                        # y mantener los valores originales para los campos no proporcionados
+                        template_args = {
+                            'role_description': original_template.role_description,
+                            'content_objective': original_template.content_objective,
+                            'style_guidance': original_template.style_guidance,
+                            'structure_description': original_template.structure_description,
+                            'tone': original_template.tone if hasattr(original_template, 'tone') else "",
+                            'format_guide': original_template.format_guide if hasattr(original_template, 'format_guide') else "",
+                            'seo_guidelines': original_template.seo_guidelines if hasattr(original_template, 'seo_guidelines') else "",
+                            'limitations': original_template.limitations if hasattr(original_template, 'limitations') else "",
+                            'additional_instructions': original_template.additional_instructions
+                        }
+                        
+                        # Actualizar con los campos proporcionados
+                        template_args.update(filtered_components)
+                        
+                        # Crear la plantilla temporal
+                        temp_template = type(original_template)(**template_args)
+                        self.update_prompt_template(temp_template)
+                        
+                        # Log para debugging
+                        logger.debug(f"Usando plantilla temporal con campos: {filtered_components.keys()}")
                     
                     # Generar contenido
                     response_text = await self._call_llm(**kwargs)
@@ -353,6 +386,7 @@ class GeneralInterestBlogAgent(BlogAgent):
                 except Exception as e:
                     # Asegurar que se restaure la plantilla original incluso si hay error
                     self.update_prompt_template(original_template)
+                    logger.error(f"Error al usar system_components: {str(e)}")
                     raise e
             else:
                 # Generar contenido con la plantilla actual
@@ -446,15 +480,48 @@ class SuccessCaseBlogAgent(BlogAgent):
                 "informacion_caso_exito": caso_exito_info
             }
             
-            # Si se proporcionaron componentes de sistema específicos, actualizar plantilla temporalmente
+            # Manejar system_components si se proporcionaron
             if request.system_components:
                 original_template = self.prompt_template
                 try:
-                    # Crear una nueva plantilla con los componentes proporcionados
-                    temp_template = SuccessCasePromptTemplate(
-                        **{k: v for k, v in request.system_components.items() if v is not None}
-                    )
-                    self.update_prompt_template(temp_template)
+                    # Verificar qué campos de system_components son válidos para el constructor
+                    valid_fields = {
+                        'role_description', 'content_objective', 'style_guidance', 
+                        'structure_description', 'tone', 'format_guide', 
+                        'seo_guidelines', 'limitations', 'additional_instructions'
+                    }
+                    
+                    # Filtrar solo los campos válidos
+                    filtered_components = {
+                        k: v for k, v in request.system_components.items() 
+                        if k in valid_fields and v is not None
+                    }
+                    
+                    # Si hay campos válidos, crear una nueva plantilla
+                    if filtered_components:
+                        # Crear una nueva plantilla con los campos proporcionados
+                        # y mantener los valores originales para los campos no proporcionados
+                        template_args = {
+                            'role_description': original_template.role_description,
+                            'content_objective': original_template.content_objective,
+                            'style_guidance': original_template.style_guidance,
+                            'structure_description': original_template.structure_description,
+                            'tone': original_template.tone if hasattr(original_template, 'tone') else "",
+                            'format_guide': original_template.format_guide if hasattr(original_template, 'format_guide') else "",
+                            'seo_guidelines': original_template.seo_guidelines if hasattr(original_template, 'seo_guidelines') else "",
+                            'limitations': original_template.limitations if hasattr(original_template, 'limitations') else "",
+                            'additional_instructions': original_template.additional_instructions
+                        }
+                        
+                        # Actualizar con los campos proporcionados
+                        template_args.update(filtered_components)
+                        
+                        # Crear la plantilla temporal
+                        temp_template = type(original_template)(**template_args)
+                        self.update_prompt_template(temp_template)
+                        
+                        # Log para debugging
+                        logger.debug(f"Usando plantilla temporal con campos: {filtered_components.keys()}")
                     
                     # Generar contenido
                     response_text = await self._call_llm(**kwargs)
@@ -464,6 +531,7 @@ class SuccessCaseBlogAgent(BlogAgent):
                 except Exception as e:
                     # Asegurar que se restaure la plantilla original incluso si hay error
                     self.update_prompt_template(original_template)
+                    logger.error(f"Error al usar system_components: {str(e)}")
                     raise e
             else:
                 # Generar contenido con la plantilla actual

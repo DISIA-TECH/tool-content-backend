@@ -1,4 +1,3 @@
-
 from typing import Dict, Any, List, Optional, Union, Literal
 from pydantic import BaseModel, Field, HttpUrl
 from common.models.base_models import ContentRequest, ContentResponse, SystemPromptConfig
@@ -60,6 +59,33 @@ class GeneralInterestRequest(ContentRequest):
         default=None,
         description="Comentarios adicionales para la generación"
     )
+    # Modificación: cambiar system_components a un diccionario con campos específicos
+    system_components: Optional[Dict[str, str]] = Field(
+        default=None,
+        description="Componentes del sistema para personalizar el prompt"
+    )
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "tema": "Inteligencia Artificial en el marketing digital",
+                "palabras_clave_primarias": ["IA", "marketing digital"],
+                "palabras_clave_secundarias": ["ROI", "automatización"],
+                "longitud": "1000-1500 palabras",
+                "publico_objetivo": "Profesionales de marketing",
+                "objetivo": "Informar",
+                "tono_especifico": "Profesional con toque conversacional",
+                "llamada_accion": "Contactar para asesoría",
+                "elementos_evitar": ["Jerga técnica excesiva"],
+                "urls_referencia": ["https://example.com/articulo"],
+                "comentarios_adicionales": "Incluir ejemplos prácticos",
+                "system_components": {
+                    "role_description": "especialista en marketing digital",
+                    "content_objective": "informar sobre aplicaciones de IA",
+                    "tone": "Profesional pero accesible"
+                }
+            }
+        }
 
 
 class SuccessCaseRequest(ContentRequest):
@@ -93,6 +119,29 @@ class SuccessCaseRequest(ContentRequest):
         default=None,
         description="Comentarios adicionales para la generación"
     )
+    # Modificación: cambiar system_components a un diccionario con campos específicos
+    system_components: Optional[Dict[str, str]] = Field(
+        default=None,
+        description="Componentes del sistema para personalizar el prompt"
+    )
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "tema": "Aumento de ventas en empresa ABC con nuestra plataforma",
+                "publico_objetivo": "Directores comerciales",
+                "objetivo": "Demostrar resultados tangibles",
+                "tono_especifico": "Profesional con datos concretos",
+                "llamada_accion": "Solicitar una demostración",
+                "elementos_evitar": ["Información confidencial"],
+                "comentarios_adicionales": "Destacar el ROI",
+                "system_components": {
+                    "role_description": "narrador de casos de éxito",
+                    "content_objective": "mostrar resultados medibles",
+                    "tone": "Basado en datos y persuasivo"
+                }
+            }
+        }
 
 
 class BlogArticleResponse(ContentResponse):
@@ -128,3 +177,13 @@ class BlogPromptCustomizationRequest(BaseModel):
     human_template: Optional[str] = None
     model: Optional[str] = None
     temperature: Optional[float] = Field(default=None, ge=0, le=1)
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "role_description": "especialista en contenido de blog tecnológico",
+                "tone": "Educativo pero accesible",
+                "temperature": 0.8,
+                "structure_description": "Introducción, problema, solución, ejemplos, conclusión"
+            }
+        }
