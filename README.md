@@ -20,7 +20,7 @@ La aplicación permite personalizar los prompts y parámetros de generación de 
 - **Logging**: Sistema de registro
 
 ## Estructura del proyecto
-
+```
 content-generator/
 ├── api/                # Capa de API
 ├── blog/               # Módulo para generación de artículos de blog
@@ -29,7 +29,7 @@ content-generator/
 ├── core/               # Configuraciones centrales
 ├── tests/              # Tests unitarios e integración
 └── requirements.txt    # Dependencias del proyecto
-
+```
 ## Características principales
 
 ### Generador de artículos de blog
