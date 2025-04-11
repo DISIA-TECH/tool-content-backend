@@ -86,7 +86,7 @@ La documentación interactiva estará disponible en:
 POST /api/v1/blog/generate/general-interest
 
 Body:
-
+```json
 {
   "tema": "Inteligencia Artificial en el marketing digital",
   "palabras_clave_primarias": ["IA", "marketing digital"],
@@ -103,3 +103,4 @@ Body:
     "tone": "Profesional pero accesible"
   }
 }
+```
