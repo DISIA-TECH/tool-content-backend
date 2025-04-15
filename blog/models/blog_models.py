@@ -66,7 +66,7 @@ class GeneralInterestRequest(ContentRequest):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "tema": "Inteligencia Artificial en el marketing digital",
                 "palabras_clave_primarias": ["IA", "marketing digital"],
@@ -126,7 +126,7 @@ class SuccessCaseRequest(ContentRequest):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "tema": "Aumento de ventas en empresa ABC con nuestra plataforma",
                 "publico_objetivo": "Directores comerciales",
@@ -179,7 +179,7 @@ class BlogPromptCustomizationRequest(BaseModel):
     temperature: Optional[float] = Field(default=None, ge=0, le=1)
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "role_description": "especialista en contenido de blog tecnológico",
                 "tone": "Educativo pero accesible",
