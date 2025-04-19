@@ -82,7 +82,13 @@ class GeneralInterestRequest(ContentRequest):
                 "system_components": {
                     "role_description": "especialista en marketing digital",
                     "content_objective": "informar sobre aplicaciones de IA",
-                    "tone": "Profesional pero accesible"
+                    "tone": "Profesional pero accesible",
+                    "style_guidance": "Usar un tono conversacional",
+                    "structure_description": "Introducción, desarrollo, conclusión",
+                    "format_guide": "Usar párrafos cortos y listas",
+                    "seo_guidelines": "Incluir palabras clave de forma natural",
+                    "limitations": "No generar contenido engañoso",
+                    "additional_instructions": "Incluir estadísticas recientes"
                 }
             }
         }

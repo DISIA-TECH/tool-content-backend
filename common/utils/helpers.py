@@ -152,3 +152,17 @@ def extract_content_from_url(url: str) -> str:
     except Exception as e:
         logger.error(f"Error al extraer contenido de URL: {str(e)}")
         raise
+
+
+def extract_hashtags(text: str) -> List[str]:
+    """
+    Extrae hashtags de un texto.
+    
+    Args:
+        text: Texto del que extraer hashtags
+        
+    Returns:
+        List[str]: Lista de hashtags extraídos
+    """
+    hashtags = re.findall(r'#(\w+)', text)
+    return hashtags

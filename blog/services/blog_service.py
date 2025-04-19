@@ -43,6 +43,7 @@ class BlogService:
             
             # Obtener configuración actual
             template = self.general_interest_agent.prompt_template
+            logger.info("hola mundo", template)
             model = self.general_interest_agent.model
             temperature = self.general_interest_agent.temperature
             

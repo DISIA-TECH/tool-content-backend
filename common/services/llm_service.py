@@ -34,6 +34,7 @@ class LLMService:
             ChatOpenAI: Instancia del modelo configurado
         """
         logger.info(f"Inicializando LLM con modelo: {self.model}, temperatura: {self.temperature}")
+        logger.info(f"Aca estan pasando cosas: {self.model}, temperatura: {self.temperature}")
         return ChatOpenAI(
             model=self.model,
             temperature=self.temperature,
