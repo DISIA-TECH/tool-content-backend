@@ -162,7 +162,7 @@ class BlogService:
             BlogArticleResponse: Artículo generado
         """
         try:
-            logger.info(f"Generando artículo de interés general sobre: {request.tema}")
+            logger.info(f"Generando artículo de interés general sobre: {request.longitud}")
             return await self.general_interest_agent.generate_content(request)
         except Exception as e:
             logger.error(f"Error al generar artículo de interés general: {str(e)}")
