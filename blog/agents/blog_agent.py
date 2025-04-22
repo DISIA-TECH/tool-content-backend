@@ -24,7 +24,8 @@ class BlogAgent(BaseAgent):
         self,
         prompt_template: BlogPromptTemplate,
         model: str = settings.OPENAI_MODEL,
-        temperature: float = settings.DEFAULT_TEMPERATURE
+        temperature: float = settings.DEFAULT_TEMPERATURE,
+        max_tokens: int = settings.DEFAULT_MAX_TOKENS
     ):
         """
         Inicializa el agente para blog.
@@ -33,8 +34,9 @@ class BlogAgent(BaseAgent):
             prompt_template: Plantilla de prompts específica para blog
             model: Modelo de lenguaje a utilizar
             temperature: Temperatura para la generación
+            max_tokens: Número máximo de tokens en la respuesta
         """
-        super().__init__(prompt_template, model, temperature)
+        super().__init__(prompt_template, model, temperature, max_tokens)
     
     async def update_customization(self, request: BlogPromptCustomizationRequest) -> None:
         """
@@ -252,7 +254,8 @@ class GeneralInterestBlogAgent(BlogAgent):
         self,
         prompt_template: Optional[GeneralInterestPromptTemplate] = None,
         model: str = settings.OPENAI_MODEL,
-        temperature: float = settings.DEFAULT_TEMPERATURE
+        temperature: float = settings.DEFAULT_TEMPERATURE,
+        max_tokens: int = settings.DEFAULT_MAX_TOKENS
     ):
         """
         Inicializa el agente para artículos de interés general.
@@ -263,7 +266,7 @@ class GeneralInterestBlogAgent(BlogAgent):
             temperature: Temperatura para la generación
         """
         template = prompt_template or GeneralInterestPromptTemplate()
-        super().__init__(template, model, temperature)
+        super().__init__(template, model, temperature, max_tokens)
         logger.info(f"Agente de blog para artículos de interés general inicializado con modelo {model}")
     
     async def _get_url_contents(self, urls: List[str]) -> str:
@@ -308,7 +311,8 @@ class GeneralInterestBlogAgent(BlogAgent):
             if request.model or request.temperature is not None:
                 self.update_model_settings(
                     model=request.model or self.model,
-                    temperature=request.temperature if request.temperature is not None else self.temperature
+                    temperature=request.temperature if request.temperature is not None else self.temperature,
+                    max_tokens=request.max_tokens if request.max_tokens is not None else self.max_tokens
                 )
             
             # Extraer contenido de URLs si se proporcionaron
@@ -375,9 +379,11 @@ class GeneralInterestBlogAgent(BlogAgent):
                         temp_template = type(original_template)(**template_args)
                         self.update_prompt_template(temp_template)
                         
+                        
                         # Log para debugging
                         logger.debug(f"Usando plantilla temporal con campos: {filtered_components.keys()}")
-                    
+                     
+
                     # Generar contenido
                     response_text = await self._call_llm(**kwargs)
                     
@@ -390,10 +396,11 @@ class GeneralInterestBlogAgent(BlogAgent):
                     raise e
             else:
                 # Generar contenido con la plantilla actual
+
                 response_text = await self._call_llm(**kwargs)
-            
+               
             # Formatear para legibilidad
-            response_text = format_content_for_readability(response_text)
+            # response_text = format_content_for_readability(response_text)
             
             # Procesar la respuesta
             parsed_response = self._parse_blog_response(response_text)
@@ -425,7 +432,8 @@ class SuccessCaseBlogAgent(BlogAgent):
         self,
         prompt_template: Optional[SuccessCasePromptTemplate] = None,
         model: str = settings.OPENAI_MODEL,
-        temperature: float = settings.DEFAULT_TEMPERATURE
+        temperature: float = settings.DEFAULT_TEMPERATURE,
+        max_tokens: int = settings.DEFAULT_MAX_TOKENS
     ):
         """
         Inicializa el agente para casos de éxito.
@@ -436,7 +444,7 @@ class SuccessCaseBlogAgent(BlogAgent):
             temperature: Temperatura para la generación
         """
         template = prompt_template or SuccessCasePromptTemplate()
-        super().__init__(template, model, temperature)
+        super().__init__(template, model, temperature, max_tokens)
         logger.info(f"Agente de blog para casos de éxito inicializado con modelo {model}")
     
     async def generate_content(self, request: SuccessCaseRequest, pdf_content: Optional[bytes] = None) -> SuccessCaseResponse:
@@ -455,7 +463,8 @@ class SuccessCaseBlogAgent(BlogAgent):
             if request.model or request.temperature is not None:
                 self.update_model_settings(
                     model=request.model or self.model,
-                    temperature=request.temperature if request.temperature is not None else self.temperature
+                    temperature=request.temperature if request.temperature is not None else self.temperature,
+                    max_tokens=request.max_tokens if request.max_tokens is not None else self.max_tokens
                 )
             
             # Extraer información del PDF si se proporcionó

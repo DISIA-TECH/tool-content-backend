@@ -20,6 +20,7 @@ class ContentRequest(BaseModel):
     """Solicitud base para generación de contenido."""
     temperature: Optional[float] = Field(default=0.7, ge=0, le=1)
     model: Optional[str] = None
+    max_tokens: Optional[int] = Field(default=2000, description="Número máximo de tokens en la respuesta")
     system_components: Optional[Dict[str, str]] = None
     
 

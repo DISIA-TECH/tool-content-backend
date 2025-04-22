@@ -43,16 +43,62 @@ class LinkedInPostRequest(ContentRequest):
         description="Información adicional para contextualizar el post"
     )
     
+    # Nuevos parámetros opcionales para el system prompt
+    role_description: Optional[str] = Field(
+        default=None,
+        description="Descripción del rol del autor del contenido"
+    )
+    content_objective: Optional[str] = Field(
+        default=None,
+        description="Objetivo principal del contenido"
+    )
+    style_guidance: Optional[str] = Field(
+        default=None,
+        description="Guía de estilo para el contenido"
+    )
+    structure_description: Optional[str] = Field(
+        default=None,
+        description="Descripción de la estructura del contenido"
+    )
+    tone: Optional[str] = Field(
+        default=None,
+        description="Tono del contenido"
+    )
+    format_guide: Optional[str] = Field(
+        default=None,
+        description="Guía de formato para el contenido"
+    )
+    engagement_tips: Optional[str] = Field(
+        default=None,
+        description="Consejos para aumentar el engagement del contenido"
+    )
+    limitations: Optional[str] = Field(
+        default=None,
+        description="Limitaciones a considerar al generar el contenido"
+    )
+    additional_instructions: Optional[str] = Field(
+        default=None,
+        description="Instrucciones adicionales para la generación del contenido"
+    )
+    
     class Config:
         json_schema_extra = {
             "example": {
                 "tema": "Transformación digital en empresas tradicionales",
-                "autor": "Pablo",
+                "autor": "Default",
                 "estilo": "Leadership",
-                "informacion_adicional": "Basado en nuestra experiencia reciente con clientes del sector industrial"
+                "informacion_adicional": "Basado en nuestra experiencia reciente con clientes del sector industrial",
+                "role_description": "líder visionario con experiencia en transformación digital",
+                "content_objective": "inspirar a otros líderes compartiendo perspectivas estratégicas",
+                "style_guidance": "Inspirador y estratégico, orientado a resultados",
+                "structure_description": "Comienza con un hecho impactante, desarrolla una visión estratégica",
+                "tone": "Autoritativo pero accesible, con enfoque en el valor estratégico",
+                "format_guide": "Párrafos concisos, una frase destacada, emojis relevantes",
+                "engagement_tips": "Compartir una lección personal, mencionar un desafío superado",
+                "limitations": "Evitar jerga excesivamente técnica, mantener el enfoque estratégico",
+                "additional_instructions": "Balancear visión tecnológica con impacto humano y organizacional"
             }
         }
-
 
 class LinkedInPostResponse(ContentResponse):
     """Respuesta con el post de LinkedIn generado."""

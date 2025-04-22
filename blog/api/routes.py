@@ -1,5 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Body, status, Form
 from typing import Dict, Any, Optional
+from pydantic import ValidationError
+import json
 
 from blog.models.blog_models import (
     GeneralInterestRequest, 
@@ -116,7 +118,7 @@ async def generate_general_interest_article(
 
 @router.post("/generate/success-case", response_model=SuccessCaseResponse)
 async def generate_success_case_article(
-    request: SuccessCaseRequest,
+    request: str = Form(...),
     pdf_file: Optional[UploadFile] = File(None),
     service: BlogService = Depends(get_blog_service)
 ):
@@ -124,11 +126,31 @@ async def generate_success_case_article(
     Genera un artículo de blog de caso de éxito.
     """
     try:
+
+        # Convertir string JSON a diccionario
+        request_data = json.loads(request)
+        # Crear objeto SuccessCaseRequest a partir del diccionario
+        validated_request = SuccessCaseRequest(**request_data)
+
+
         pdf_content = None
         if pdf_file:
             pdf_content = await pdf_file.read()
             
-        return await service.generate_success_case_article(request, pdf_content)
+        # Generar el artículo utilizando el servicio
+        return await service.generate_success_case_article(validated_request, pdf_content)
+    except json.JSONDecodeError as e:
+        logger.error(f"Error al decodificar JSON: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"JSON inválido en el campo 'request': {str(e)}"
+        )
+    except ValidationError as e:
+        logger.error(f"Error de validación: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Datos inválidos: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Error al generar artículo de caso de éxito: {str(e)}")
         raise HTTPException(

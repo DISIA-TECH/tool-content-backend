@@ -1,6 +1,7 @@
 from typing import Dict, Any, List, Optional, Union
 import json
 import re
+import inspect
 
 from common.base_agent import BaseAgent
 from common.utils.helpers import extract_hashtags, format_content_for_readability
@@ -93,6 +94,54 @@ class LinkedInAgent(BaseAgent):
         # Si no, usar el modelo predeterminado
         return self.model
     
+    def _create_template_instance(self, template_class, original_template, additional_instructions):
+        """
+        Crea una nueva instancia de plantilla basada en la clase proporcionada.
+        Solo incluye los parámetros que acepta específicamente cada clase.
+        
+        Args:
+            template_class: Clase de la plantilla a crear
+            original_template: Plantilla original de la que copiar valores
+            additional_instructions: Instrucciones adicionales
+            
+        Returns:
+            LinkedInPromptTemplate: Nueva instancia de la plantilla
+        """
+        # Inspeccionar la firma del constructor de la clase
+        signature = inspect.signature(template_class.__init__)
+        valid_params = list(signature.parameters.keys())
+        
+        # Quitar 'self' que siempre está en la firma pero no se pasa al constructor
+        if 'self' in valid_params:
+            valid_params.remove('self')
+        
+        # Crear un diccionario con los parámetros válidos para esta clase
+        template_kwargs = {}
+        
+        # Añadir solo los parámetros que la clase acepta
+        param_mapping = {
+            'role_description': 'role_description',
+            'content_objective': 'content_objective',
+            'style_guidance': 'style_guidance',
+            'structure_description': 'structure_description',
+            'tone': 'tone',
+            'format_guide': 'format_guide',
+            'additional_instructions': 'additional_instructions',
+            'engagement_tips': 'engagement_tips',
+            'limitations': 'limitations'
+        }
+        
+        for param_name, attr_name in param_mapping.items():
+            if param_name in valid_params and hasattr(original_template, attr_name):
+                # Valor especial para instrucciones adicionales
+                if param_name == 'additional_instructions':
+                    template_kwargs[param_name] = additional_instructions
+                else:
+                    template_kwargs[param_name] = getattr(original_template, attr_name)
+        
+        # Crear y devolver la nueva instancia
+        return template_class(**template_kwargs)
+    
     async def generate_content(self, **kwargs) -> Any:
         """
         Implementación del método abstracto de BaseAgent.
@@ -124,7 +173,60 @@ class LinkedInAgent(BaseAgent):
             # Seleccionar plantilla según el estilo
             style_template = get_prompt_template_for_style(request.estilo)
             original_template = self.prompt_template
-            self.update_prompt_template(style_template)
+            
+            # Verificar si se proporcionaron parámetros de system prompt en la solicitud
+            # y crear una plantilla personalizada si es necesario
+            if any([
+                request.role_description is not None,
+                request.content_objective is not None,
+                request.style_guidance is not None,
+                request.structure_description is not None,
+                request.tone is not None,
+                request.format_guide is not None,
+                request.engagement_tips is not None,
+                request.limitations is not None,
+                request.additional_instructions is not None
+            ]):
+                # Crear un diccionario con los valores base de la plantilla original
+                template_kwargs = {}
+                
+                # Lista de atributos a verificar y posiblemente sobrescribir
+                template_attrs = [
+                    'role_description', 'content_objective', 'style_guidance',
+                    'structure_description', 'tone', 'format_guide', 
+                    'engagement_tips', 'limitations', 'additional_instructions'
+                ]
+                
+                # Para cada atributo, usar el valor de la solicitud si se proporciona,
+                # de lo contrario, usar el valor de la plantilla original si existe
+                for attr in template_attrs:
+                    request_value = getattr(request, attr, None)
+                    if request_value is not None:
+                        # Si el valor se proporciona en la solicitud, usarlo
+                        template_kwargs[attr] = request_value
+                    elif hasattr(style_template, attr):
+                        # Si no se proporciona pero existe en la plantilla original, usarlo
+                        template_kwargs[attr] = getattr(style_template, attr)
+                
+                # Crear una nueva instancia de la plantilla con los valores combinados
+                # Utilizamos la misma clase que la plantilla original
+                template_class = type(style_template)
+                custom_template = self._create_template_instance(
+                    template_class, style_template, template_kwargs.get('additional_instructions', '')
+                )
+                
+                # Para los demás atributos (que no son additional_instructions, ya manejado por _create_template_instance)
+                for attr in template_attrs:
+                    if attr != 'additional_instructions' and attr in template_kwargs:
+                        # Solo establecer atributos que la clase acepta
+                        if hasattr(custom_template, attr):
+                            setattr(custom_template, attr, template_kwargs[attr])
+                
+                # Usar esta plantilla personalizada en lugar de la original
+                self.update_prompt_template(custom_template)
+            else:
+                # Si no hay parámetros personalizados, usar la plantilla estándar del estilo
+                self.update_prompt_template(style_template)
             
             # Determinar si usar un modelo fine-tuned o el modelo estándar
             use_fine_tuned = request.autor != LinkedInAuthor.DEFAULT
@@ -141,18 +243,14 @@ class LinkedInAgent(BaseAgent):
                     additional_instructions = self.prompt_template.additional_instructions or ""
                     combined_instructions = f"{additional_instructions}\n\n{author_instructions}" if additional_instructions else author_instructions
                     
-                    # Crear nueva plantilla con las instrucciones del autor
-                    new_template = type(style_template)(
-                        role_description=style_template.role_description,
-                        content_objective=style_template.content_objective,
-                        style_guidance=style_template.style_guidance,
-                        structure_description=style_template.structure_description,
-                        tone=style_template.tone,
-                        format_guide=style_template.format_guide,
-                        engagement_tips=style_template.engagement_tips if hasattr(style_template, 'engagement_tips') else "",
-                        limitations=style_template.limitations,
+                    # Usar nuestro método auxiliar para crear la plantilla correctamente
+                    template_class = type(self.prompt_template)
+                    new_template = self._create_template_instance(
+                        template_class=template_class,
+                        original_template=self.prompt_template,
                         additional_instructions=combined_instructions
                     )
+                    
                     self.update_prompt_template(new_template)
             
             # Preparar kwargs para el prompt
@@ -166,7 +264,7 @@ class LinkedInAgent(BaseAgent):
                 response_text = await self._call_llm(**kwargs)
                 
                 # Formatear para legibilidad
-                response_text = format_content_for_readability(response_text)
+                # response_text = format_content_for_readability(response_text)
                 
                 # Procesar la respuesta
                 parsed_response = self._parse_linkedin_post(response_text)

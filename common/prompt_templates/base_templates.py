@@ -31,11 +31,12 @@ class ContentPromptTemplate(BasePromptTemplate):
         role_description: str,
         content_objective: str,
         style_guidance: str,
-        structure_description: str,
+        structure_description: str = "",
         tone: str = "",
         format_guide: str = "",
         seo_guidelines: str = "",
         limitations: str = "",
+        required_length: str = "",
         additional_instructions: Optional[str] = None
     ):
         """
@@ -60,10 +61,12 @@ class ContentPromptTemplate(BasePromptTemplate):
         self.format_guide = format_guide
         self.seo_guidelines = seo_guidelines
         self.limitations = limitations
+        self.required_length = required_length
         self.additional_instructions = additional_instructions
     
     def get_system_message(self) -> str:
         """Construye un mensaje del sistema estructurado."""
+        
         system_message = f"""Eres un {self.role_description}.
 Tu objetivo es {self.content_objective}.
 
@@ -101,6 +104,13 @@ Tu objetivo es {self.content_objective}.
         if self.style_guidance:
             system_message += f"""ESTILO:
 {self.style_guidance}
+"""
+            
+        system_message += f"""REQUISITO DE LONGITUD:
+IMPORTANTE: El contenido generado DEBE tener {self.required_length}. 
+Este es un requisito obligatorio. 
+Asegúrate de desarrollar el contenido con suficiente detalle para alcanzar exactamente esta longitud.
+
 """
             
         if self.additional_instructions:

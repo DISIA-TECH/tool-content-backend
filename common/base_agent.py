@@ -19,7 +19,8 @@ class BaseAgent(ABC):
         self,
         prompt_template: BasePromptTemplate,
         model: str = settings.OPENAI_MODEL,
-        temperature: float = settings.DEFAULT_TEMPERATURE
+        temperature: float = settings.DEFAULT_TEMPERATURE,
+        max_tokens: int = settings.DEFAULT_MAX_TOKENS
     ):
         """
         Inicializa el agente con una plantilla de prompts y configuración del modelo.
@@ -28,10 +29,12 @@ class BaseAgent(ABC):
             prompt_template: Plantilla de prompts a utilizar
             model: Modelo de lenguaje a utilizar
             temperature: Temperatura para la generación (creatividad)
+            max_tokens: Número máximo de tokens en la respuesta
         """
         self.prompt_template = prompt_template
         self.model = model
         self.temperature = temperature
+        self.max_tokens = max_tokens
         self.llm = self._initialize_llm()
         
     def _initialize_llm(self) -> ChatOpenAI:
@@ -41,10 +44,11 @@ class BaseAgent(ABC):
         Returns:
             ChatOpenAI: Instancia del modelo configurado
         """
-        logger.info(f"Inicializando LLM con modelo: {self.model}, temperatura: {self.temperature}")
+        logger.info(f"Inicializando LLM con modelo: {self.model}, temperatura: {self.temperature}, max_tokens: {self.max_tokens}")
         return ChatOpenAI(
             model=self.model,
             temperature=self.temperature,
+            max_tokens=self.max_tokens,
             api_key=settings.OPENAI_API_KEY
         )
     
@@ -58,13 +62,19 @@ class BaseAgent(ABC):
         self.prompt_template = new_template
         logger.info("Plantilla de prompts actualizada")
     
-    def update_model_settings(self, model: Optional[str] = None, temperature: Optional[float] = None) -> None:
+    def update_model_settings(
+        self, 
+        model: Optional[str] = None, 
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None
+    ) -> None:
         """
         Actualiza la configuración del modelo.
         
         Args:
             model: Nuevo modelo a utilizar (opcional)
             temperature: Nueva temperatura a utilizar (opcional)
+            max_tokens: Nuevo límite de tokens (opcional)
         """
         if model:
             self.model = model
@@ -72,9 +82,12 @@ class BaseAgent(ABC):
         if temperature is not None:
             self.temperature = temperature
             
+        if max_tokens is not None:
+            self.max_tokens = max_tokens
+            
         self.llm = self._initialize_llm()
-        logger.info(f"Configuración del modelo actualizada - Modelo: {self.model}, Temperatura: {self.temperature}")
-    
+        logger.info(f"Configuración del modelo actualizada - Modelo: {self.model}, Temperatura: {self.temperature}, Max Tokens: {self.max_tokens}")
+        
     def _get_messages(self, **kwargs) -> List[Dict[str, Any]]:
         """
         Construye los mensajes para la llamada al modelo.
@@ -86,9 +99,11 @@ class BaseAgent(ABC):
             List[Dict[str, Any]]: Lista de mensajes formateados
         """
         prompt_data = self.prompt_template.get_prompt_data()
+
         
         # Crear mensaje de sistema
         system_message = SystemMessage(content=prompt_data["system_message"])
+
         
         # Formatear plantilla de usuario con los kwargs
         human_content = prompt_data["human_template"].format(**kwargs)
@@ -120,7 +135,22 @@ class BaseAgent(ABC):
             str: Respuesta del modelo
         """
         try:
+
             messages = self._get_messages(**kwargs)
+            
+
+
+            # Agregar logging detallado aquí
+            system_content = messages[0].content if messages else "No system message"
+            human_content = messages[1].content if len(messages) > 1 else "No human message"
+            
+            logger.info("===== PROMPT ENVIADO AL MODELO =====")
+            logger.info(f"SYSTEM PROMPT:\n{system_content}\n")
+            logger.info(f"HUMAN PROMPT:\n{human_content}\n")
+            logger.info("===== FIN DEL PROMPT =====")
+            
+            # También puedes loggear los kwargs para ver qué variables se usaron
+            logger.debug(f"Variables utilizadas: {json.dumps(kwargs, indent=2, ensure_ascii=False)}")
             logger.debug(f"Enviando mensajes al LLM: {json.dumps([m.dict() for m in messages], indent=2)}")
             
             response = await self.llm.ainvoke(messages)
